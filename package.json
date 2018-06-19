@@ -1,0 +1,21 @@
+{
+  "name": "teleop",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.3",
+    "express": "^4.16.3",
+    "hbs": "~4.0.1",
+    "morgan": "^1.9.0",
+    "nipplejs": "^0.6.8",
+    "requirejs": "^2.3.5",
+    "rosnodejs": "^2.2.0",
+    "serve-favicon": "~2.4.2",
+    "socket.io": "^2.1.0"
+  }
+}
