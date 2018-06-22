@@ -10,4 +10,13 @@ router.get('/nipple',function(req,res,next){
 	res.render('nipple');
 });
 
+router.get('/teleop',function(req,res,next){
+	res.render('teleop');
+});
+
+router.get('/video',function(req,res,next){
+	res.render('video');
+});
+
+
 module.exports = router;

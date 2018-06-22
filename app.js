@@ -12,7 +12,7 @@ var app = express();
 
 var http = require('http'); 
 server = http.createServer(app);
-var io = require('socket.io')(server);
+var io = require('socket.io').listen(server);
 
 
 // view engine setup
@@ -30,12 +30,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/users', users);
 
-// catch 404 and forward to error handler
+/*// catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
-});
+});*/
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -115,6 +115,8 @@ io.on('connection', function(socket){
     publisher.publish(msg);*/
   });
 });
+var easyrtc = require("easyrtc");           // EasyRTC external module
 
+var easyrtcServer = easyrtc.listen(app, io);
 
 module.exports = { app: app, server: server};
