@@ -13,8 +13,8 @@ var app = express();
 var http = require('http'); 
 server = http.createServer(app);
 var io = require('socket.io').listen(server);
-var lastmessage = Date.now();
-var deltatime_threshold = 300;
+// 100hz
+var frequency = 10;
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -59,24 +59,41 @@ rosnodejs.initNode('movecare_teleop')
 
 function ROSHandler() 
   {
-
-  this.sendMessage = function(linear,angular,scale){
-    var vct_linear = new twist_msgs.Vector3();
+  var vct_linear = new twist_msgs.Vector3();
+  var vct_angular = new twist_msgs.Vector3();
+  var msg = new twist_msgs.Twist();
+  var started = false;
+  this.setMessage = function(linear,angular,scale){
     vct_linear.x = linear * scale;
     vct_linear.y = 0; 
     vct_linear.z = 0;
-    var vct_angular = new twist_msgs.Vector3();
     vct_angular.x = 0;
     vct_angular.y = 0; 
     vct_angular.z = angular * scale;
-    var msg = new twist_msgs.Twist();
     msg.linear = vct_linear;
     msg.angular = vct_angular;
-    console.log(msg);
-    publisher.publish(msg);
+  }
 
-  return this
-  };
+  this.start = function () {
+    if (!started) 
+      {
+        started = true;
+        sendMessage();
+    }
+  }
+
+  this.stop = function() {
+    started = false;
+  }
+
+  var sendMessage = function() {
+    console.log(Date.now());
+    publisher.publish(msg);
+    if (started)
+      setTimeout(function(){sendMessage()}, frequency);
+  }
+
+  return this;
 };
 
 var ros_wrapper = new ROSHandler(publisher);
@@ -88,7 +105,8 @@ io.on('connection', function(socket){
   socket.on('STARTEND',function(data){
     console.log("START-END");
     console.log(data);
-    ros_wrapper.sendMessage(0,0,0);
+    ros_wrapper.setMessage(0,0,0);
+    //ros_wrapper.stop();
   });
   socket.on('DIRECTION',function(data){
     console.log("DIRECTION");
@@ -98,13 +116,11 @@ io.on('connection', function(socket){
     console.log("MOVE");
     //console.log(data);
     var linear = Math.sin(data.angle.radian);
-    var angular = Math.cos(-data.angle.radian);
+    var angular = Math.cos(data.angle.radian);
     var scale = data.force / 2;
-    let cur_time = Date.now();
-    if (cur_time - lastmessage > deltatime_threshold){
-      ros_wrapper.sendMessage(linear,angular,scale);
-      lastmessage = cur_time;
-    }
+    ros_wrapper.setMessage(linear,angular,scale);
+    ros_wrapper.start();
+
 /*    var vct_linear = new twist_msgs.Vector3();
     vct_linear.x = linear * scale;
     vct_linear.y = 0; 
