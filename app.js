@@ -13,7 +13,8 @@ var app = express();
 var http = require('http'); 
 server = http.createServer(app);
 var io = require('socket.io').listen(server);
-
+var lastmessage = Date.now();
+var deltatime_threshold = 300;
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -97,9 +98,13 @@ io.on('connection', function(socket){
     console.log("MOVE");
     //console.log(data);
     var linear = Math.sin(data.angle.radian);
-    var angular = Math.cos(data.angle.radian);
+    var angular = Math.cos(-data.angle.radian);
     var scale = data.force / 2;
-    ros_wrapper.sendMessage(linear,angular,scale);
+    let cur_time = Date.now();
+    if (cur_time - lastmessage > deltatime_threshold){
+      ros_wrapper.sendMessage(linear,angular,scale);
+      lastmessage = cur_time;
+    }
 /*    var vct_linear = new twist_msgs.Vector3();
     vct_linear.x = linear * scale;
     vct_linear.y = 0; 
