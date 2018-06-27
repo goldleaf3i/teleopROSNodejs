@@ -4,14 +4,36 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-
+const config = require('./config');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
 
-var http = require('http'); 
-server = http.createServer(app);
+var server;
+var serverMode;
+// LAUNCH WITH DEBUG=http,tmt,bells,app,socketio nodemon
+
+/**
+ * Create HTTP or HTTPS server.
+ */
+
+if(config.HttpsKeyFile && config.HttpsCertFile){
+    const https = require('https');
+    const fs = require('fs');
+    server    = https.createServer({
+        key: fs.readFileSync(config.HttpsKeyFile),
+        cert: fs.readFileSync(config.HttpsCertFile),
+    },app);
+    serverMode ='https';
+}
+else{
+    logger.warn('No HTTPS certificates provided, starting in HTTP mode');
+    const http = require('http');
+    server = http.createServer(app);
+    serverMode = 'http';
+}
+
 var io = require('socket.io').listen(server);
 // 100hz
 var frequency = 10;
@@ -31,12 +53,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/users', users);
 
-/*// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});*/
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -106,7 +122,7 @@ io.on('connection', function(socket){
     console.log("START-END");
     console.log(data);
     ros_wrapper.setMessage(0,0,0);
-    //ros_wrapper.stop();
+    ros_wrapper.stop();
   });
   socket.on('DIRECTION',function(data){
     console.log("DIRECTION");
@@ -120,20 +136,6 @@ io.on('connection', function(socket){
     var scale = data.force / 2;
     ros_wrapper.setMessage(linear,angular,scale);
     ros_wrapper.start();
-
-/*    var vct_linear = new twist_msgs.Vector3();
-    vct_linear.x = linear * scale;
-    vct_linear.y = 0; 
-    vct_linear.z = 0;
-    var vct_angular = new twist_msgs.Vector3();
-    vct_angular.x = 0;
-    vct_angular.y = 0; 
-    vct_angular.z = angular * scale;
-    var msg = new twist_msgs.Twist();
-    msg.linear = vct_linear;
-    msg.angular = vct_angular;
-    console.log(msg);
-    publisher.publish(msg);*/
   });
 });
 var easyrtc = require("easyrtc");           // EasyRTC external module
