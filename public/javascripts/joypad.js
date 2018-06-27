@@ -1,7 +1,8 @@
 var socket = io();
 var joystick = nipplejs.create({
     zone: document.getElementById('zone_joystick'),
-    color: 'blue'
+    color: 'blue',
+    size:200
 });
 
   joystick.on('start end', function(evt, data) {

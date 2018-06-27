@@ -79,8 +79,8 @@ function ROSHandler()
   var vct_angular = new twist_msgs.Vector3();
   var msg = new twist_msgs.Twist();
   var started = false;
-  this.setMessage = function(linear,angular,scale){
-    vct_linear.x = linear * scale;
+  this.setMessage = function(linear,angular,scale,rescale_linear){
+    vct_linear.x = linear * scale * rescale_linear;
     vct_linear.y = 0; 
     vct_linear.z = 0;
     vct_angular.x = 0;
@@ -121,7 +121,7 @@ io.on('connection', function(socket){
   socket.on('STARTEND',function(data){
     console.log("START-END");
     console.log(data);
-    ros_wrapper.setMessage(0,0,0);
+    ros_wrapper.setMessage(0,0,0,1);
     ros_wrapper.stop();
   });
   socket.on('DIRECTION',function(data){
@@ -132,9 +132,9 @@ io.on('connection', function(socket){
     console.log("MOVE");
     //console.log(data);
     var linear = Math.sin(data.angle.radian);
-    var angular = Math.cos(data.angle.radian);
+    var angular = -Math.cos(data.angle.radian);
     var scale = data.force / 2;
-    ros_wrapper.setMessage(linear,angular,scale);
+    ros_wrapper.setMessage(linear,angular,scale,0.5);
     ros_wrapper.start();
   });
 });
